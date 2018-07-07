@@ -202,24 +202,32 @@ export default {
       txt.style.height = Math.abs(heig) + "px";
       txt.style.width = Math.abs(widt) + "px";
     },
-    drawArrow(position) {
-      var angle = Math.atan2(
-        position.y - this.dragStartLocation.y,
-        position.x - this.dragStartLocation.y
-      );
-      this.ctx.lineTo(position.x, position.y);
-      this.ctx.moveTo(
-        position.x -
-          this.controls.linewidth * 5 * Math.cos(angle + Math.PI / 6),
-        position.y - self.linewidth * 5 * Math.sin(angle + Math.PI / 6)
-      );
-      this.ctx.lineTo(position.x, position.y);
-      this.ctx.lineTo(
-        position.x -
-          this.controls.linewidth * 5 * Math.cos(angle - Math.PI / 6),
-        position.y - this.controls.linewidth * 5 * Math.sin(angle - Math.PI / 6)
-      );
+    drawArrow(fromx, fromy, tox, toy){
+      var headlen = 10;
+
+      var angle = Math.atan2(toy-fromy,tox-fromx);
+
+      //starting path of the arrow from the start square to the end square and drawing the stroke
+      this.ctx.beginPath();
+      this.ctx.moveTo(fromx, fromy);
+      this.ctx.lineTo(tox, toy);
       this.ctx.stroke();
+
+      //starting a new path from the head of the arrow to one of the sides of the point
+      this.ctx.beginPath();
+      this.ctx.moveTo(tox, toy);
+      this.ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7),toy-headlen*Math.sin(angle-Math.PI/7));
+
+      //path from the side point of the arrow, to the other side point
+      this.ctx.lineTo(tox-headlen*Math.cos(angle+Math.PI/7),toy-headlen*Math.sin(angle+Math.PI/7));
+
+      //path from the side point back to the tip of the arrow, and then again to the opposite side point
+      this.ctx.lineTo(tox, toy);
+      this.ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7),toy-headlen*Math.sin(angle-Math.PI/7));
+
+      //draws the paths created above
+      this.ctx.stroke();
+      this.ctx.fill();
     },
     getCanvasCoordinates(event) {
       const x = event.clientX - this.canvas.getBoundingClientRect().left;
@@ -243,7 +251,7 @@ export default {
           this.drawText(pos, event);
           break;
         case "arrow":
-          this.drawArrow(pos);
+          this.drawArrow(this.dragStartLocation.x, this.dragStartLocation.y, pos.x, pos.y);
           break;
       }
     },
