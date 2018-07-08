@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "publish:demo": "yarn build -d docs && git add . && git commit -m 'publish demo' && git push"
+    "publish:demo": "yarn build --dest docs && git add . && git commit -m 'publish demo' && git push"
   },
   "dependencies": {
     "vue": "^2.5.16"
