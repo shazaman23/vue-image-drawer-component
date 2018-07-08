@@ -24,7 +24,7 @@
             </li>
             <li>
               <label for="pen">Pen</label>
-              <input type="radio" id="arrow" value="pen" v-model="controls.shape" name="shape">
+              <input type="radio" id="pen" value="pen" v-model="controls.shape" name="shape">
             </li>
             <li>
               <label for="text">Text</label>

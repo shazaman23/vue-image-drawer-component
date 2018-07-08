@@ -5,7 +5,7 @@
         <div
           class="upload-image-placeholder"
           v-if="!imagesPreview.length">
-            Upload your images
+             Click / drag and drop images here
         </div>
         <div>
           <transition-group name="slide" class="image-upload-preview" mode="out-in" tag="div">
@@ -15,7 +15,6 @@
            </div>
            <div class="img-item upload-card" key="ccc" v-if="imagesPreview.length">
             <input type="file" @change="onChange" ref="uploader" multiple>
-             <i class="material-icons">photos</i>
              Click / drag and drop images here
            </div>
           </transition-group>
