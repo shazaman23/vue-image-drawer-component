@@ -36,11 +36,11 @@ export default {
   },
   methods: {
     onChange() {
-      console.log(this.$refs.uploader.files);
       // get the fiels
       const files = this.$refs.uploader.files;
+
       console.log('start uploading');
-      if (!files.length) {
+      if (!files || !files.length) {
         console.log('no images...');
         return;
       }
