@@ -2,57 +2,62 @@
   <div class="image-editor">
     <button @click="$emit('input', null)">close</button>
     <button @click="clearImage">clear image</button>
+    <button @click="saveCanvasAsImage">save changes</button>
     <div class="image-editor-wrapper">
       <div class="image-editor-toolbar">
         <ul>
           <li>
-            <label for="">fill Box</label>
-            <input type="checkbox" v-model="controls.fillBox"/>
+            <label for="fill-box">fill Box</label>
+            <input type="checkbox" id="fill-box" v-model="controls.fillBox"/>
           </li>
             <li>
-              <label for="">Circle  </label>
-              <input type="radio" value="circle" v-model="controls.shape" name="shape">
+              <label for="circle">Circle  </label>
+              <input type="radio" id="circle" value="circle" v-model="controls.shape" name="shape">
             </li>
             <li>
-              <label for="">Line</label>
-              <input type="radio" value="line" v-model="controls.shape" name="shape">
+              <label for="line">Line</label>
+              <input type="radio" id="line" value="line" v-model="controls.shape" name="shape">
             </li>
             <li>
-              <label for="">Arrow</label>
-              <input type="radio" value="arrow" v-model="controls.shape" name="shape">
+              <label for="arrow">Arrow</label>
+              <input type="radio" id="arrow" value="arrow" v-model="controls.shape" name="shape">
             </li>
             <li>
-              <label for="">Text</label>
-              <input type="radio" value="text" v-model="controls.shape" name="shape">
+              <label for="pen">Pen</label>
+              <input type="radio" id="arrow" value="pen" v-model="controls.shape" name="shape">
+            </li>
+            <li>
+              <label for="text">Text</label>
+              <input type="radio" id="text" value="text" v-model="controls.shape" name="shape">
             </li>
           <li>
-            <label for="">Line width</label>
-            <input type="range" :min="1" v-model="controls.lineWidth" :max="50" />
+            <label for="line-width">Line width</label>
+            <input type="range" id="line-width" :min="1" v-model="controls.lineWidth" :max="50" />
           </li>
           <li>
-            <label for="">fill color</label>
-            <input type="color" v-model="controls.fillColor"/>
+            <label for="fill-color">fill color</label>
+            <input type="color" id="fill-color" v-model="controls.fillColor"/>
           </li>
           <li>
-            <label for="">stroke color</label>
-            <input type="color" v-model="controls.strokeColor"/>
+            <label for="stroke-color">stroke color</label>
+            <input type="color" id="stroke-color" v-model="controls.strokeColor"/>
           </li>
           <li>
-            <label for="">text color</label>
-            <input type="color" v-model="controls.textColor"/>
+            <label for="text-color">text color</label>
+            <input type="color" id="text-color" v-model="controls.textColor"/>
           </li>
           <li>
-            <label for="">Font size</label>
-            <input type="range" :min="1" v-model="controls.fontSize" :max="50" />
+            <label for="font-size">Font size</label>
+            <input type="range" id="font-size" :min="1" v-model="controls.fontSize" :max="50" />
           </li>
 
         </ul>
       </div>
       <div class="image-editor-canvas">
         <canvas
-          :width="imageSizes.widt" 
-          :height="imageSizes.hegh" 
           ref="canvas"
+          width="800"
+          height="800"
           @mousemove="onDragging"
           @mouseup="onDragStop"
           @mousedown="onDragStart">
@@ -75,9 +80,7 @@
 <script>
 export default {
   props: {
-    value: {
-      type: String
-    }
+    value: {}
   },
   data() {
     return {
@@ -96,13 +99,18 @@ export default {
         fillColor: "#800080",
         textColor: "#800080",
         fontSize: 14
+      },
+      pen: {
+        lastX: null,
+        lastY: null,
+        lineStart: true
       }
     };
   },
   computed: {
     imageSizes() {
       const img = new Image();
-      img.src = this.value;
+      img.src = this.value.src;
       return {
         widt: img.width,
         hegh: img.height
@@ -125,15 +133,17 @@ export default {
       this.ctx.strokeStyle = this.controls.strokeColor;
       this.ctx.fillStyle = this.controls.fillColor;
       this.ctx.lineWidth = this.controls.lineWidth;
+      this.ctx.ClipToBounds = true
 
       this.ctx.lineCap = "round";
 
       // draw image on canvas
       const img = new Image();
-      img.src = this.value;
+      img.src = this.value.src;
       img.onload = () => {
-        console.log("image loaded");
         this.ctx.drawImage(img, 0, 0);
+        this.drawImageProp(this.ctx, img, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height, 0.1, 0.5);
+
       };
     },
     onDragging(event) {
@@ -147,25 +157,36 @@ export default {
       this.dragging = true;
       this.takeSnapshot();
       this.dragStartLocation = this.getCanvasCoordinates(event);
-      if (this.controls.shape === "text") {
-        let txt = this.$refs.canvas_text;
-        txt.value = null;
-        txt.style.display = "block";
-        txt.style.width = 0;
-        txt.style.left = event.clientX + "px";
-        txt.style.top = event.clientY + "px";
-        this.dragStartLocationEvent = event;
-        const self = this;
-        txt.addEventListener("mouseup", function() {
-          self.dragging = false;
-        });
-      }
+
+      this.$nextTick(() => {
+        if (this.controls.shape === "text") {
+          let txt = this.$refs.canvas_text;
+          this.canvas_text = '';
+          txt.style.display = "block";
+          txt.style.width = 0;
+          txt.style.left = event.clientX + "px";
+          txt.style.top = event.clientY + "px";
+          this.dragStartLocationEvent = event;
+          const self = this;
+          txt.addEventListener("mouseup", function() {
+            self.dragging = false;
+          });
+        }
+      })
     },
 
     onDragStop(event) {
       console.log("drag stop");
       this.dragging = false;
       this.draw(event);
+      if (this.controls.shape === 'text') {
+        this.$refs.canvas_text.focus()
+        console.log('focused')
+      } else if(this.controls.shape === 'pen') {
+        this.pen.lineStart = true
+        this.pen.lastX = null
+        this.pen.lastY = null
+      }
     },
 
     drawLine(position) {
@@ -173,6 +194,19 @@ export default {
       this.ctx.moveTo(this.dragStartLocation.x, this.dragStartLocation.y);
       this.ctx.lineTo(position.x, position.y);
       this.ctx.stroke();
+    },
+    drawPen(pos) {
+      if(this.pen.lineStart){
+        this.pen.lastX = this.dragStartLocation.x;
+        this.pen.lastY = this.dragStartLocation.y;
+        this.pen.lineStart = false;
+        this.ctx.beginPath()
+      }
+      this.ctx.lineTo(this.pen.lastX, this.pen.lastY);
+      this.ctx.lineTo(pos.x, pos.y);
+      this.ctx.stroke();
+      this.pen.lastX = pos.x;
+      this.pen.lastY = pos.y;
     },
     drawCircle(position) {
       const radius = Math.sqrt(
@@ -229,6 +263,53 @@ export default {
       this.ctx.stroke();
       this.ctx.fill();
     },
+    drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
+
+        if (arguments.length === 2) {
+            x = y = 0;
+            w = ctx.canvas.width;
+            h = ctx.canvas.height;
+        }
+
+        // default offset is center
+        offsetX = typeof offsetX === "number" ? offsetX : 0.5;
+        offsetY = typeof offsetY === "number" ? offsetY : 0.5;
+
+        // keep bounds [0.0, 1.0]
+        if (offsetX < 0) offsetX = 0;
+        if (offsetY < 0) offsetY = 0;
+        if (offsetX > 1) offsetX = 1;
+        if (offsetY > 1) offsetY = 1;
+
+        var iw = img.width,
+            ih = img.height,
+            r = Math.min(w / iw, h / ih),
+            nw = iw * r,   // new prop. width
+            nh = ih * r,   // new prop. height
+            cx, cy, cw, ch, ar = 1;
+
+        // decide which gap to fill    
+        if (nw < w) ar = w / nw;                             
+        if (Math.abs(ar - 1) < 1e-14 && nh < h) ar = h / nh;  // updated
+        nw *= ar;
+        nh *= ar;
+
+        // calc source rectangle
+        cw = iw / (nw / w);
+        ch = ih / (nh / h);
+
+        cx = (iw - cw) * offsetX;
+        cy = (ih - ch) * offsetY;
+
+        // make sure source rectangle is valid
+        if (cx < 0) cx = 0;
+        if (cy < 0) cy = 0;
+        if (cw > iw) cw = iw;
+        if (ch > ih) ch = ih;
+
+        // fill image in dest. rectangle
+        ctx.drawImage(img, cx, cy, cw, ch,  x, y, w, h);
+    },
     getCanvasCoordinates(event) {
       const x = event.clientX - this.canvas.getBoundingClientRect().left;
       const y = event.clientY - this.canvas.getBoundingClientRect().top;
@@ -248,11 +329,35 @@ export default {
           this.drawCircle(pos);
           break;
         case "text":
+        case "pen":
+          this.drawPen(pos);
+          break;
+        case "text":
           this.drawText(pos, event);
           break;
         case "arrow":
           this.drawArrow(this.dragStartLocation.x, this.dragStartLocation.y, pos.x, pos.y);
           break;
+      }
+    },
+    wrapText (drawingContext, text, x, y, maxWidth, lineHeight) {
+      var lines = text.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        var words = lines[i].split(' ');
+        var line = '';
+        for (var n = 0; n < words.length; n++) {
+          var testLine = line + words[n] + ' ';
+          var metrics = drawingContext.measureText(testLine);
+          var testWidth = metrics.width;
+          if (testWidth > maxWidth && n > 0) {
+            drawingContext.fillText(line, x, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+          } else {
+            line = testLine;
+          }
+        }
+        drawingContext.fillText(line, x, y + i * lineHeight);
       }
     },
     takeSnapshot() {
@@ -270,11 +375,16 @@ export default {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       // draw image on canvas
       const img = new Image();
-      img.src = this.value;
+      img.src = this.value.src;
       img.onload = () => {
-        console.log("image loaded");
-        this.ctx.drawImage(img, 0, 0);
+        this.drawImageProp(this.ctx, img, 0, 0, this.ctx.canvas.width, this.ctx.canvas.height, 0.1, 0.5);
       };
+    },
+    saveCanvasAsImage () {
+      const imgDataUrl = this.canvas.toDataURL('image/png')
+      this.$nextTick(() => {
+        this.$emit('input', {src:imgDataUrl, key: this.value.key})
+      })
     },
     saveCanvasText(event) {
       const txt = this.$refs.canvas_text;
@@ -282,18 +392,22 @@ export default {
       if (this.canvas_text) {
         console.log(12, this.canvas_text);
         this.ctx.fillStyle = this.controls.textColor
-        this.ctx.font = `${this.controls.fontSize}px serif`;
+        this.ctx.textBaseline = 'top'
+        this.ctx.font = `${this.controls.fontSize}px 'Avenir', Helvetica, Arial, sans-serif`;
         const pos = this.getCanvasCoordinates({
           clientX: event.target.offsetLeft + event.target.clientWidth,
           clientY: event.target.offsetTop
         });
-        console.log(event);
-        this.ctx.fillText(this.canvas_text, pos.x, pos.y);
+        console.log('event', txt.clientWidth);
+        // this.ctx.fillText(this.canvas_text, pos.x, pos.y);
+        this.wrapText(this.ctx, this.canvas_text, pos.x + 3, pos.y + 4, txt.clientWidth, 25)
         this.canvas_text = null;
         this.$nextTick(() => {
           // this.canvas_text = null
           this.ctx.fillStyle = this.controls.fillColor
         });
+      } else {
+        txt.style.display = 'none'
       }
     }
   },
