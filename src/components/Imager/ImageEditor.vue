@@ -328,7 +328,6 @@ export default {
         case "circle":
           this.drawCircle(pos);
           break;
-        case "text":
         case "pen":
           this.drawPen(pos);
           break;
