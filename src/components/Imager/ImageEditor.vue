@@ -1,84 +1,76 @@
 <template>
   <div class="image-editor">
-    <button @click="$emit('input', null)">close</button>
-    <button @click="clearImage">clear image</button>
-    <button @click="saveCanvasAsImage">save changes</button>
-    <div class="image-editor-wrapper">
-      <div class="image-editor-toolbar">
-        <ul>
-          <li>
-            <label for="fill-box">fill Box</label>
-            <input type="checkbox" id="fill-box" v-model="controls.fillBox"/>
-          </li>
-            <li>
-              <label for="circle">Circle  </label>
-              <input type="radio" id="circle" value="circle" v-model="controls.shape" name="shape">
-            </li>
-            <li>
-              <label for="line">Line</label>
-              <input type="radio" id="line" value="line" v-model="controls.shape" name="shape">
-            </li>
-            <li>
-              <label for="arrow">Arrow</label>
-              <input type="radio" id="arrow" value="arrow" v-model="controls.shape" name="shape">
-            </li>
-            <li>
-              <label for="pen">Pen</label>
-              <input type="radio" id="pen" value="pen" v-model="controls.shape" name="shape">
-            </li>
-            <li>
-              <label for="text">Text</label>
-              <input type="radio" id="text" value="text" v-model="controls.shape" name="shape">
-            </li>
-          <li>
+    <div class="container-fluid">
+      <div class="edit-shape d-flex text-center my-3 text-capitalize">
+        <template v-if="controls.shape !== 'text'">
+          <div class="d-flex flex-column align-items-center border mb-2 p-2">
             <label for="line-width">Line width</label>
             <input type="range" id="line-width" :min="1" v-model="controls.lineWidth" :max="50" />
-          </li>
-          <li>
-            <label for="fill-color">fill color</label>
-            <input type="color" id="fill-color" v-model="controls.fillColor"/>
-          </li>
-          <li>
+          </div>
+          <div class="d-flex flex-column align-items-center border mb-2 p-2">
             <label for="stroke-color">stroke color</label>
             <input type="color" id="stroke-color" v-model="controls.strokeColor"/>
-          </li>
-          <li>
-            <label for="text-color">text color</label>
-            <input type="color" id="text-color" v-model="controls.textColor"/>
-          </li>
-          <li>
+          </div>
+        </template>
+        <template v-else>
+          <div class="d-flex flex-column align-items-center border mb-2 p-2">
             <label for="font-size">Font size</label>
             <input type="range" id="font-size" :min="1" v-model="controls.fontSize" :max="50" />
-          </li>
-
-        </ul>
+          </div>
+          <div class="d-flex flex-column align-items-center border mb-2 p-2">
+            <label for="text-color">text color</label>
+            <input type="color" id="text-color" v-model="controls.textColor"/>
+          </div>
+        </template>
       </div>
-      <div class="image-editor-canvas">
-        <canvas
-          ref="canvas"
-          width="800"
-          height="800"
-          @mousemove="onDragging"
-          @mouseup="onDragStop"
-          @mousedown="onDragStart">
-        </canvas>
-        <textarea
-          @blur="saveCanvasText"
-          ref="canvas_text" 
-          width="0" 
-          v-model="canvas_text"
-          :style="{
-            color: controls.textColor,
-            fontSize: controls.fontSize+'px',
-            borderColor: controls.strokeColor,
-            backgroundColor: controls.fillBox ? controls.fillColor : 'transparent' }">
-        </textarea>
+      <div class="mb-2">
+        <button class="btn btn-primary" @click="$emit('input', null)">close</button>
+        <button class="btn btn-primary mx-3" @click="clearImage">clear image</button>
+        <button class="btn btn-primary" @click="saveCanvasAsImage">save changes</button>
+      </div>
+      <div class="image-editor-wrapper">
+        <div class="row">
+          <div class="col-md-2">
+            <div class="image-editor-toolbar bar-bg">
+              <EditorShape v-model="controls.shape" shape="circle" icon="genderless"/>
+              <EditorShape v-model="controls.shape" shape="line" icon="ellipsis-v"/>
+              <EditorShape v-model="controls.shape" shape="pen" icon="pencil"/>
+              <EditorShape v-model="controls.shape" shape="text" icon="font"/>
+              <EditorShape v-model="controls.shape" shape="arrow" icon="long-arrow-down"/>
+            </div>
+          </div>
+            <div class="col-md-10">
+              <div class="image-editor-canvas">
+                <canvas
+                  ref="canvas"
+                  width="800"
+                  height="800"
+                  @mousemove="onDragging"
+                  @mouseup="onDragStop"
+                  @mousedown="onDragStart">
+                </canvas>
+                <textarea
+                  @blur="saveCanvasText"
+                  ref="canvas_text" 
+                  width="0" 
+                  v-model="canvas_text"
+                  :style="{
+                    color: controls.textColor,
+                    fontSize: controls.fontSize+'px',
+                    borderColor: controls.strokeColor,
+                    backgroundColor: controls.fillBox ? controls.fillColor : 'transparent' }">
+                </textarea>
+              </div>
+            </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script>
+import EditorShape from './EditorShape'
 export default {
+  components: {EditorShape},
   props: {
     value: {}
   },

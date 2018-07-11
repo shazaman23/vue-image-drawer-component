@@ -10,11 +10,11 @@
         <div>
           <transition-group name="slide" class="image-upload-preview" mode="out-in" tag="div">
            <div class="img-item" v-for="(img, i) in imagesPreview" :key="img.key" :style="{'background-image': `url(${img.src})`}">
-             <i class="material-icons action-icon removeImageIcon" @click="removeImage(i)">close</i>
-             <i class="material-icons action-icon editImageIcon" @click="editImage(img)">edit</i>
+             <i class="fa fa-close action-icon removeImageIcon" @click="removeImage(i)"></i>
+             <i class="fa fa-edit action-icon editImageIcon" @click="editImage(img)"></i>
            </div>
            <div class="img-item upload-card" key="ccc" v-if="imagesPreview.length">
-            <input type="file" @change="onChange" ref="uploader" multiple>
+            <input type="file" @change="onChange" ref="uploader_2" multiple>
              Click / drag and drop images here
            </div>
           </transition-group>
@@ -37,7 +37,8 @@ export default {
   methods: {
     onChange() {
       // get the fiels
-      const files = this.$refs.uploader.files;
+      const files = this.$refs.uploader.files || this.$refs.uploader_2.files;
+      console.log(files)
 
       console.log('start uploading');
       if (!files || !files.length) {

@@ -1,15 +1,11 @@
-@import url(https://fonts.googleapis.com/icon?family=Material+Icons);
-html,
-body {
-  direction: rtl !important;
-}
+$fa-font-path: '~font-awesome/fonts';
+@import '~font-awesome/scss/font-awesome';
 
+@import "bootstrap/bootstrap";
 // Image Editor
-$toolbarWidth: 200px;
 .image {
   &-editor {
     overflow: auto;
-    padding: 40px;
     background-color: #f1f1f1;
     position: fixed;
     top: 0;
@@ -17,8 +13,8 @@ $toolbarWidth: 200px;
     width: 100%;
     height: 100%;
     z-index: 1;
+    padding: 40px 0;
     &-canvas {
-      width: 80% !important;
       overflow: auto;
       overflow-x: hidden;
       canvas {
@@ -27,27 +23,16 @@ $toolbarWidth: 200px;
       }
     }
     &-toolbar {
-      width: $toolbarWidth;
-      float: right;
-      width: 200px;
-      background-color: #f1f1f1;
-      margin-right: 60px;
-      box-shadow: 1px 2px 14px 6px #ccc;
       color: #000;
-      ul {
-        margin: 0;
-        padding: 0;
-        li {
-          list-style: none;
-          margin: 10px 0;
-          padding: 5px;
+      width: 100px;
+      .edit-shape {
+          padding:10px 5px;
           display: block;
           border-bottom: 1px solid #d0d0d0;
           text-align: right;
           display: flex;
           align-items: center;
-          justify-content: flex-end;
-          flex-direction: row-reverse;
+          justify-content: center;
           flex-wrap: wrap;
           input {
             margin: 0 10px;
@@ -59,7 +44,9 @@ $toolbarWidth: 200px;
             border: none;
             padding-bottom: 0;
           }
-        }
+          &.active {
+            background-color: #ddd;
+          }
       }
     }
     textarea {
@@ -71,6 +58,10 @@ $toolbarWidth: 200px;
       font-family: 'Avenir', Helvetica, Arial, sans-serif
     }
   }
+}
+.bar-bg {
+  background-color: #f1f1f1;
+  box-shadow: 1px 2px 14px 6px #ccc;
 }
 
 
@@ -126,7 +117,6 @@ $toolbarWidth: 200px;
           height: 30px;
           text-align: center;
           line-height: 30px;
-          font-size: 22px;
           position: absolute;
           top: 10px;
           cursor: pointer;

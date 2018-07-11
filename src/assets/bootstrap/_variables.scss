@@ -1,0 +1,7 @@
+$body-bg: #f9f9f9;
+$theme-colors:( 'primary': #2d7c8d, 'secondary': #dd287d, 'tertiary': #662d91, 'smoke': #EFEFEF, 'gray': #A5A5A5);
+$enable-shadows: true;
+@function rem-calc($size) {
+  $remSize: $size / 16;
+  @return #{$remSize}rem;
+}

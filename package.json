@@ -9,6 +9,8 @@
     "publish:demo": "yarn build --dest docs && git add . && git commit -m 'publish demo' && git push"
   },
   "dependencies": {
+    "bootstrap": "^4.1.1",
+    "font-awesome": "^4.7.0",
     "vue": "^2.5.16"
   },
   "devDependencies": {
