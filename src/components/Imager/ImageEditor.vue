@@ -80,8 +80,14 @@
 <script>
 import EditorShape from './EditorShape';
 import Stack from '../../helpers/Stack';
+// Shapes
 import drawCircle from './shapes/circle';
 import drawArrow from './shapes/arrow';
+import drawLine from './shapes/line';
+import pen from './shapes/pen';
+// Draw Events
+import onDragStart from './events/onDragStart';
+import onDragStop from './events/onDragStop';
 
 export default {
   components: { EditorShape },
@@ -105,12 +111,7 @@ export default {
         fillColor: '#800080',
         textColor: '#800080',
         fontSize: 14,
-      },
-      pen: {
-        lastX: null,
-        lastY: null,
-        lineStart: true,
-      },
+      }
     };
   },
   computed: {
@@ -137,7 +138,7 @@ export default {
         Stack.pop();
         this.initCanvasBg(() => {
           for (let i = 0; i < Stack.length(); i++) {
-            this.drawLine(Stack.dataStore[i], this.ctx);
+            drawLine(Stack.dataStore[i], this.ctx);
           }
         });
       }
@@ -175,70 +176,11 @@ export default {
       }
     },
     onDragStart(event) {
-      this.dragStartLocationEvent = event;
-      this.dragStartLocation = this.getCanvasCoordinates(event);
-      this.dragging = true;
-      this.takeSnapshot();
-
-      this.$nextTick(() => {
-        if (this.controls.shape === 'text') {
-          const txt = this.$refs.canvas_text;
-          this.canvas_text = '';
-          txt.style.display = 'block';
-          txt.style.width = 0;
-          txt.style.left = `${this.dragStartLocation.x}px`;
-          txt.style.top = `${this.dragStartLocation.y}px`;
-          const self = this;
-          txt.addEventListener('mouseup', () => {
-            self.dragging = false;
-          });
-        }
-      });
+      return onDragStart(this)(event);
     },
 
     onDragStop(event) {
-      const pos = this.getCanvasCoordinates(event);
-      const start_from = this.dragStartLocation;
-      this.dragging = false;
-      this.draw(event);
-      if (this.controls.shape === 'text') {
-        this.$refs.canvas_text.focus();
-      } else if (this.controls.shape === 'pen') {
-        this.pen.lineStart = true;
-        this.pen.lastX = null;
-        this.pen.lastY = null;
-      } else if (this.controls.shape === 'line') {
-        const shapeProps = {
-          type: this.controls.shape,
-          start_from,
-          position: pos,
-          strokeColor: this.controls.strokeColor,
-          lineWidth: this.controls.lineWidth,
-        };
-        Stack.push(shapeProps);
-      }
-    },
-
-    drawLine(opt, ctx) {
-      ctx.beginPath();
-      ctx.moveTo(opt.start_from.x, opt.start_from.y);
-      ctx.lineTo(opt.position.x, opt.position.y);
-      ctx.lineWidth = opt.lineWidth;
-      ctx.strokeStyle = opt.strokeColor;
-      ctx.stroke();
-    },
-    drawPen(pos) {
-      if (this.pen.lineStart) {
-        this.pen.lastX = this.dragStartLocation.x;
-        this.pen.lastY = this.dragStartLocation.y;
-        this.pen.lineStart = false;
-        this.ctx.beginPath();
-      }
-      this.ctx.lineTo(this.pen.lastX, this.pen.lastY);
-      this.ctx.lineTo(pos.x, pos.y);
-      this.ctx.stroke();
-      this.pen.lastX = pos.x;
-      this.pen.lastY = pos.y;
+      return onDragStop(this, pen, Stack)(event);
     },
     drawText(position, event) {
       const heig = event.clientY - this.dragStartLocationEvent.clientY;
@@ -263,18 +205,18 @@ export default {
         case 'line':
           const shapeProps = {
             type: this.controls.shape,
-            start_from: this.dragStartLocation,
-            position: pos,
+            from: this.dragStartLocation,
+            to: pos,
             strokeColor: this.controls.strokeColor,
             lineWidth: this.controls.lineWidth,
           };
-          this.drawLine(shapeProps, this.ctx);
+          drawLine(shapeProps, this.ctx);
           break;
         case 'circle':
           drawCircle({from: this.dragStartLocation,  to: pos }, this.ctx);
           break;
         case 'pen':
-          this.drawPen(pos);
+          pen.drawPen({to: pos, from: this.dragStartLocation}, this.ctx);
           break;
         case 'text':
           this.drawText(pos, event);
