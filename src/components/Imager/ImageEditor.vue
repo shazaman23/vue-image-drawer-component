@@ -51,8 +51,8 @@
                 </canvas>
                 <textarea
                   @blur="saveCanvasText"
-                  ref="canvas_text" 
-                  width="0" 
+                  ref="canvas_text"
+                  width="0"
                   v-model="canvas_text"
                   :style="{
                     color: controls.textColor,
@@ -78,12 +78,15 @@
   </div>
 </template>
 <script>
-import EditorShape from "./EditorShape";
-import Stack from "../../helpers/Stack";
+import EditorShape from './EditorShape';
+import Stack from '../../helpers/Stack';
+import drawCircle from './shapes/circle';
+import drawArrow from './shapes/arrow';
+
 export default {
   components: { EditorShape },
   props: {
-    value: {}
+    value: {},
   },
   data() {
     return {
@@ -96,18 +99,18 @@ export default {
       canvas_text: null,
       controls: {
         fillBox: false,
-        shape: "line",
+        shape: 'line',
         lineWidth: 6,
-        strokeColor: "#800080",
-        fillColor: "#800080",
-        textColor: "#800080",
-        fontSize: 14
+        strokeColor: '#800080',
+        fillColor: '#800080',
+        textColor: '#800080',
+        fontSize: 14,
       },
       pen: {
         lastX: null,
         lastY: null,
-        lineStart: true
-      }
+        lineStart: true,
+      },
     };
   },
   computed: {
@@ -116,53 +119,53 @@ export default {
       img.src = this.value.src;
       return {
         widt: img.width,
-        hegh: img.height
+        hegh: img.height,
       };
-    }
+    },
   },
   mounted() {
     // console.log('mounted')
-    (function(vm) {
+    (function (vm) {
       vm.init();
-      window.addEventListener('keyup', vm.ctrlZ)
-    })(this);
+      window.addEventListener('keyup', vm.ctrlZ);
+    }(this));
   },
   methods: {
-    ctrlZ (event) {
+    ctrlZ(event) {
       if (event.keyCode == 90 && event.ctrlKey) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        Stack.pop()
+        Stack.pop();
         this.initCanvasBg(() => {
           for (let i = 0; i < Stack.length(); i++) {
-            this.drawLine(Stack.dataStore[i], this.ctx)
+            this.drawLine(Stack.dataStore[i], this.ctx);
           }
-        })
+        });
       }
     },
     init() {
       this.canvas = this.$refs.canvas;
-      this.canvas.style.width = "100%";
+      this.canvas.style.width = '100%';
       // make canvas takes its parent width
       this.canvas.width = this.canvas.offsetWidth;
       // init canvas context
-      this.ctx = this.canvas.getContext("2d");
+      this.ctx = this.canvas.getContext('2d');
       const c_div = document.querySelector('.image-editor-canvas');
       // shapes style
       this.ctx.strokeStyle = this.controls.strokeColor;
       this.ctx.fillStyle = this.controls.fillColor;
       this.ctx.lineWidth = this.controls.lineWidth;
       this.ctx.ClipToBounds = true;
-      this.ctx.lineCap = "round";
-      this.initCanvasBg()
+      this.ctx.lineCap = 'round';
+      this.initCanvasBg();
     },
-    initCanvasBg (callback) {
+    initCanvasBg(callback) {
       // draw image on canvas
       const img = new Image();
       img.src = this.value.src;
       img.onload = () => {
         this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
         if (callback) {
-          callback(true)
+          callback(true);
         }
       };
     },
@@ -178,15 +181,15 @@ export default {
       this.takeSnapshot();
 
       this.$nextTick(() => {
-        if (this.controls.shape === "text") {
-          let txt = this.$refs.canvas_text;
-          this.canvas_text = "";
-          txt.style.display = "block";
+        if (this.controls.shape === 'text') {
+          const txt = this.$refs.canvas_text;
+          this.canvas_text = '';
+          txt.style.display = 'block';
           txt.style.width = 0;
-          txt.style.left = this.dragStartLocation.x + "px";
-          txt.style.top = this.dragStartLocation.y + "px";
+          txt.style.left = `${this.dragStartLocation.x}px`;
+          txt.style.top = `${this.dragStartLocation.y}px`;
           const self = this;
-          txt.addEventListener("mouseup", function() {
+          txt.addEventListener('mouseup', () => {
             self.dragging = false;
           });
         }
@@ -198,19 +201,19 @@ export default {
       const start_from = this.dragStartLocation;
       this.dragging = false;
       this.draw(event);
-      if (this.controls.shape === "text") {
+      if (this.controls.shape === 'text') {
         this.$refs.canvas_text.focus();
-      } else if (this.controls.shape === "pen") {
+      } else if (this.controls.shape === 'pen') {
         this.pen.lineStart = true;
         this.pen.lastX = null;
         this.pen.lastY = null;
-      } else if (this.controls.shape === "line") {
+      } else if (this.controls.shape === 'line') {
         const shapeProps = {
           type: this.controls.shape,
           start_from,
           position: pos,
           strokeColor: this.controls.strokeColor,
-          lineWidth: this.controls.lineWidth
+          lineWidth: this.controls.lineWidth,
         };
         Stack.push(shapeProps);
       }
@@ -237,119 +240,62 @@ export default {
       this.pen.lastX = pos.x;
       this.pen.lastY = pos.y;
     },
-    drawCircle(position) {
-      const radius = Math.sqrt(
-        Math.pow(this.dragStartLocation.x - position.x, 2) +
-          Math.pow(this.dragStartLocation.y - position.y, 2)
-      );
-      this.ctx.beginPath();
-      this.ctx.arc(
-        this.dragStartLocation.x,
-        this.dragStartLocation.y,
-        radius,
-        0,
-        Math.PI * 2,
-        false
-      );
-      this.ctx.stroke();
-    },
     drawText(position, event) {
-      let heig = event.clientY - this.dragStartLocationEvent.clientY;
-      let widt = event.clientX - this.dragStartLocationEvent.clientX;
+      const heig = event.clientY - this.dragStartLocationEvent.clientY;
+      const widt = event.clientX - this.dragStartLocationEvent.clientX;
 
       const txt = this.$refs.canvas_text;
-      txt.style.height = Math.abs(heig) + "px";
-      txt.style.width = Math.abs(widt) + "px";
-    },
-    drawArrow(fromx, fromy, tox, toy) {
-      var headlen = 10;
-
-      var angle = Math.atan2(toy - fromy, tox - fromx);
-
-      //starting path of the arrow from the start square to the end square and drawing the stroke
-      this.ctx.beginPath();
-      this.ctx.moveTo(fromx, fromy);
-      this.ctx.lineTo(tox, toy);
-      this.ctx.stroke();
-
-      //starting a new path from the head of the arrow to one of the sides of the point
-      this.ctx.beginPath();
-      this.ctx.moveTo(tox, toy);
-      this.ctx.lineTo(
-        tox - headlen * Math.cos(angle - Math.PI / 7),
-        toy - headlen * Math.sin(angle - Math.PI / 7)
-      );
-
-      //path from the side point of the arrow, to the other side point
-      this.ctx.lineTo(
-        tox - headlen * Math.cos(angle + Math.PI / 7),
-        toy - headlen * Math.sin(angle + Math.PI / 7)
-      );
-
-      //path from the side point back to the tip of the arrow, and then again to the opposite side point
-      this.ctx.lineTo(tox, toy);
-      this.ctx.lineTo(
-        tox - headlen * Math.cos(angle - Math.PI / 7),
-        toy - headlen * Math.sin(angle - Math.PI / 7)
-      );
-
-      //draws the paths created above
-      this.ctx.stroke();
-      this.ctx.fill();
+      txt.style.height = `${Math.abs(heig)}px`;
+      txt.style.width = `${Math.abs(widt)}px`;
     },
     getCanvasCoordinates(event) {
       const x = event.clientX - this.canvas.getBoundingClientRect().left;
       const y = event.clientY - this.canvas.getBoundingClientRect().top;
       return {
         x,
-        y
+        y,
       };
     },
     draw(event) {
       const pos = this.getCanvasCoordinates(event);
       this.getSnapshot();
       switch (this.controls.shape) {
-        case "line":
+        case 'line':
           const shapeProps = {
             type: this.controls.shape,
             start_from: this.dragStartLocation,
             position: pos,
             strokeColor: this.controls.strokeColor,
-            lineWidth: this.controls.lineWidth
+            lineWidth: this.controls.lineWidth,
           };
           this.drawLine(shapeProps, this.ctx);
           break;
-        case "circle":
-          this.drawCircle(pos);
+        case 'circle':
+          drawCircle({from: this.dragStartLocation,  to: pos }, this.ctx);
           break;
-        case "pen":
+        case 'pen':
           this.drawPen(pos);
           break;
-        case "text":
+        case 'text':
           this.drawText(pos, event);
           break;
-        case "arrow":
-          this.drawArrow(
-            this.dragStartLocation.x,
-            this.dragStartLocation.y,
-            pos.x,
-            pos.y
-          );
+        case 'arrow':
+          drawArrow({from: this.dragStartLocation,  to: pos }, this.ctx);
           break;
       }
     },
     wrapText(drawingContext, text, x, y, maxWidth, lineHeight) {
-      var lines = text.split("\n");
-      for (var i = 0; i < lines.length; i++) {
-        var words = lines[i].split(" ");
-        var line = "";
-        for (var n = 0; n < words.length; n++) {
-          var testLine = line + words[n] + " ";
-          var metrics = drawingContext.measureText(testLine);
-          var testWidth = metrics.width;
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const words = lines[i].split(' ');
+        let line = '';
+        for (let n = 0; n < words.length; n++) {
+          const testLine = `${line + words[n]} `;
+          const metrics = drawingContext.measureText(testLine);
+          const testWidth = metrics.width;
           if (testWidth > maxWidth && n > 0) {
             drawingContext.fillText(line, x, y);
-            line = words[n] + " ";
+            line = `${words[n]} `;
             y += lineHeight;
           } else {
             line = testLine;
@@ -363,7 +309,7 @@ export default {
         0,
         0,
         this.canvas.width,
-        this.canvas.height
+        this.canvas.height,
       );
     },
     getSnapshot() {
@@ -374,22 +320,22 @@ export default {
       this.initCanvasBg();
     },
     saveCanvasAsImage() {
-      const imgDataUrl = this.canvas.toDataURL("image/png");
+      const imgDataUrl = this.canvas.toDataURL('image/png');
       this.$nextTick(() => {
-        this.$emit("input", { src: imgDataUrl, key: this.value.key });
+        this.$emit('input', { src: imgDataUrl, key: this.value.key });
       });
     },
     saveCanvasText(event) {
       const txt = this.$refs.canvas_text;
       if (this.canvas_text) {
         this.ctx.fillStyle = this.controls.textColor;
-        this.ctx.textBaseline = "top";
+        this.ctx.textBaseline = 'top';
         this.ctx.font = `${
           this.controls.fontSize
         }px 'Avenir', Helvetica, Arial, sans-serif`;
         const pos = this.getCanvasCoordinates({
           clientX: event.target.offsetLeft + event.target.clientWidth,
-          clientY: event.target.offsetTop
+          clientY: event.target.offsetTop,
         });
         // this.ctx.fillText(this.canvas_text, pos.x, pos.y);
         this.wrapText(
@@ -398,7 +344,7 @@ export default {
           pos.x + 3,
           pos.y + 4,
           txt.clientWidth,
-          25
+          25,
         );
         this.canvas_text = null;
         this.$nextTick(() => {
@@ -406,21 +352,21 @@ export default {
           this.ctx.fillStyle = this.controls.fillColor;
         });
       } else {
-        txt.style.display = "none";
+        txt.style.display = 'none';
       }
-    }
+    },
   },
   watch: {
-    "controls.lineWidth": function(nVal, oldVal) {
+    'controls.lineWidth': function (nVal, oldVal) {
       this.ctx.lineWidth = nVal;
     },
-    "controls.strokeColor": function(nVal, oldVal) {
+    'controls.strokeColor': function (nVal, oldVal) {
       this.ctx.strokeStyle = nVal;
-      this.ctx.fillStyle = nVal
+      this.ctx.fillStyle = nVal;
     },
-    "controls.shape": function(nVal, oldVal) {
-      this.$refs.canvas_text.style.display = "none";
-    }
-  }
+    'controls.shape': function (nVal, oldVal) {
+      this.$refs.canvas_text.style.display = 'none';
+    },
+  },
 };
 </script>

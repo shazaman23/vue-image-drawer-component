@@ -38,7 +38,7 @@ export default {
     onChange() {
       // get the fiels
       const files = this.$refs.uploader.files || this.$refs.uploader_2.files;
-      console.log(files)
+      console.log(files);
 
       console.log('start uploading');
       if (!files || !files.length) {
@@ -71,15 +71,13 @@ export default {
       this.selectedImage = ImgObject;
     },
     imageEdited(editedImage) {
-      console.log(editedImage)
+      console.log(editedImage);
       if (editedImage) {
-        const updatedImageIndex = this.imagesPreview.findIndex(img => {
-          return img.key === editedImage.key
-        })
-        this.imagesPreview[updatedImageIndex].src = editedImage.src
-        this.selectedImage = null
+        const updatedImageIndex = this.imagesPreview.findIndex(img => img.key === editedImage.key);
+        this.imagesPreview[updatedImageIndex].src = editedImage.src;
+        this.selectedImage = null;
       }
-    }
+    },
   },
 };
 </script>

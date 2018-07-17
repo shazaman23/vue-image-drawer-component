@@ -8,12 +8,12 @@
 export default {
   props: {
     shape: {
-      type: String
+      type: String,
     },
     icon: {
-      type: String
+      type: String,
     },
-    value: {}
-  }
-}
+    value: {},
+  },
+};
 </script>
