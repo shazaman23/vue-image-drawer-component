@@ -38,11 +38,8 @@ export default {
     onChange() {
       // get the fiels
       const files = this.$refs.uploader.files || this.$refs.uploader_2.files;
-      console.log(files);
-
-      console.log('start uploading');
       if (!files || !files.length) {
-        console.log('no images...');
+        alert('no images...');
         return;
       }
 
@@ -50,7 +47,7 @@ export default {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file.type.match('image/*')) {
-          console.log(`${file.name} must be an image`);
+          alert(`${file.name} must be an image`);
           continue;
         }
 
@@ -71,7 +68,6 @@ export default {
       this.selectedImage = ImgObject;
     },
     imageEdited(editedImage) {
-      console.log(editedImage);
       if (editedImage) {
         const updatedImageIndex = this.imagesPreview.findIndex(img => img.key === editedImage.key);
         this.imagesPreview[updatedImageIndex].src = editedImage.src;

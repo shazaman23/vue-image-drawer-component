@@ -1,4 +1,4 @@
-const onDragStop = (vm, pen, stack) => (event) => {
+const onDragStop = (vm, pen) => (event) => {
   const pos = vm.getCanvasCoordinates(event);
   const startFrom = vm.dragStartLocation;
   vm.dragging = false;
@@ -16,8 +16,9 @@ const onDragStop = (vm, pen, stack) => (event) => {
       to: pos,
       strokeColor: vm.controls.strokeColor,
       lineWidth: vm.controls.lineWidth,
+      timestamp: Date.now(),
     };
-    stack.push(shapeProps);
+    vm.push(shapeProps);
   }
 };
 

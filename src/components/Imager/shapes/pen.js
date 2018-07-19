@@ -3,7 +3,6 @@ const pen = {
   lastY: null,
   lineStart: true,
   drawPen(props, ctx) {
-    console.log(pen);
     if (pen.lineStart) {
       pen.lastX = props.from.x;
       pen.lastY = props.from.y;

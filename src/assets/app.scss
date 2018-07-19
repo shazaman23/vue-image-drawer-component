@@ -53,14 +53,17 @@ $fa-font-path: '~font-awesome/fonts';
           }
       }
     }
-    textarea {
+    .canvas-text {
       position: absolute;
       display: none;
       width: 0;
       left: 0;
       background: none;
-      border: 2px solid;
-      font-family: 'Avenir', Helvetica, Arial, sans-serif
+      font-family: 'Avenir', Helvetica, Arial, sans-serif;
+      textarea {
+        width: 100%;
+        height: 100%;
+      }
     }
   }
 }

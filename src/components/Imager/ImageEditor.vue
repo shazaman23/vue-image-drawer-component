@@ -22,6 +22,28 @@
             <input type="color" id="text-color" v-model="controls.textColor"/>
           </div>
         </template>
+        <div class="d-flex flex-column align-items-center border mb-2 p-2">
+          <label for="text-color">undo</label>
+          <button 
+            class="btn btn-primary btn-sm"
+            :class="{disabled: !shapesStack.dataStore.length}"
+            :disabled="!shapesStack.dataStore.length"
+            @click="undoShapes"
+            >
+              <i class="fa fa-undo"></i>
+          </button>
+        </div>
+        <div class="d-flex flex-column align-items-center border mb-2 p-2">
+          <label for="text-color">redo</label>
+          <button
+            class="btn btn-primary btn-sm"
+            :class="{disabled: !shapesStack.redoStackDataStore.length}"
+            :disabled="!shapesStack.redoStackDataStore.length"
+            @click="redoShapes"
+            >
+              <i class="fa fa-undo" style="transform: rotateY(180deg)"></i>
+            </button>
+        </div>
       </div>
       <div class="mb-2">
         <button class="btn btn-primary" @click="$emit('input', null)">close</button>
@@ -49,26 +71,32 @@
                   @mouseup="onDragStop"
                   @mousedown="onDragStart">
                 </canvas>
-                <textarea
-                  @blur="saveCanvasText"
-                  ref="canvas_text"
-                  width="0"
-                  v-model="canvas_text"
-                  :style="{
-                    color: controls.textColor,
-                    fontSize: controls.fontSize+'px',
-                    borderColor: controls.strokeColor,
-                    backgroundColor: controls.fillBox ? controls.fillColor : 'transparent' }">
-                </textarea>
+                <div ref="canvas_text" class="canvas-text">
+                  <textarea
+                    @blur="saveCanvasText"
+                    width="0"
+                    v-model="canvas_text"
+                    :style="{
+                      color: controls.textColor,
+                      fontSize: controls.fontSize+'px',
+                      borderColor: controls.strokeColor,
+                      backgroundColor: controls.fillBox ? controls.fillColor : 'transparent' }">
+                  </textarea>
+                </div>
               </div>
             </div>
           <div class="col-md-2">
-            <div class="image-editor-toolbar bar-bg">
-              <EditorShape v-model="controls.shape" shape="circle" icon="genderless"/>
-              <EditorShape v-model="controls.shape" shape="line" icon="ellipsis-v"/>
-              <EditorShape v-model="controls.shape" shape="pen" icon="pencil"/>
-              <EditorShape v-model="controls.shape" shape="text" icon="font"/>
-              <EditorShape v-model="controls.shape" shape="arrow" icon="long-arrow-down"/>
+            <div id="accordion">
+              <LayerText
+                :value="listShapesALayer('text')"
+                v-if="listShapesALayer('text').length"
+                @onDelete="deleteShape"
+                 />
+              <LayerLine
+                :value="listShapesALayer('line')"
+                v-if="listShapesALayer('line').length"
+                @onDelete="deleteShape"
+                 />
             </div>
           </div>
 
@@ -78,21 +106,25 @@
   </div>
 </template>
 <script>
-import EditorShape from './EditorShape';
-import Stack from '../../helpers/Stack';
+import EditorShape from "./EditorShape";
 // Shapes
-import drawCircle from './shapes/circle';
-import drawArrow from './shapes/arrow';
-import drawLine from './shapes/line';
-import pen from './shapes/pen';
+import drawCircle from "./shapes/circle";
+import drawArrow from "./shapes/arrow";
+import drawLine from "./shapes/line";
+import { drawTextarea, saveCanvasText, startTextFrom, redrawText } from "./shapes/text";
+import pen from "./shapes/pen";
 // Draw Events
-import onDragStart from './events/onDragStart';
-import onDragStop from './events/onDragStop';
+import onDragStart from "./events/onDragStart";
+import onDragStop from "./events/onDragStop";
+import onDragging from "./events/onDragging";
+// Layers
+import LayerText from './layers/LayerText';
+import LayerLine from './layers/LayerLine';
 
 export default {
-  components: { EditorShape },
+  components: { EditorShape, LayerText, LayerLine },
   props: {
-    value: {},
+    value: {}
   },
   data() {
     return {
@@ -105,12 +137,16 @@ export default {
       canvas_text: null,
       controls: {
         fillBox: false,
-        shape: 'line',
+        shape: "text",
         lineWidth: 6,
-        strokeColor: '#800080',
-        fillColor: '#800080',
-        textColor: '#800080',
-        fontSize: 14,
+        strokeColor: "#800080",
+        fillColor: "#800080",
+        textColor: "#800080",
+        fontSize: 40
+      },
+      shapesStack: {
+        dataStore: [],
+        redoStackDataStore: []
       }
     };
   },
@@ -120,44 +156,75 @@ export default {
       img.src = this.value.src;
       return {
         widt: img.width,
-        hegh: img.height,
+        hegh: img.height
       };
     },
+    stackLength() {
+      this.shapesStack.top;
+    },
+    stackDataset() {
+      return this.shapesStack.dataStore;
+    }
   },
   mounted() {
-    // console.log('mounted')
-    (function (vm) {
+    (function(vm) {
       vm.init();
-      window.addEventListener('keyup', vm.ctrlZ);
-    }(this));
+      window.addEventListener("keyup", vm.ctrlZ);
+    })(this);
   },
   methods: {
     ctrlZ(event) {
       if (event.keyCode == 90 && event.ctrlKey) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        Stack.pop();
-        this.initCanvasBg(() => {
-          for (let i = 0; i < Stack.length(); i++) {
-            drawLine(Stack.dataStore[i], this.ctx);
-          }
-        });
+        const shape = this.pop();
+        if (!shape) return;
+        this.redoPush(shape)
+        if (shape)
+        {
+          this.redoPush(shape);
+        }
+        this.reRenderShapes()
       }
+    },
+    reRenderShapes(type = 'undo') {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      const self = this;
+      let shapes = self.shapesStack.dataStore;
+      this.initCanvasBg(() => {
+        for (let i = 0; i < shapes.length; i++) {
+          let shape = shapes[i]
+          if (shape.type === 'line')
+          {
+            drawLine(shape, this.ctx);
+          } else if(shape.type === 'text') {
+            redrawText(shape, self)
+          }
+        }
+      });
     },
     init() {
       this.canvas = this.$refs.canvas;
-      this.canvas.style.width = '100%';
+      this.canvas.style.width = "100%";
       // make canvas takes its parent width
       this.canvas.width = this.canvas.offsetWidth;
       // init canvas context
-      this.ctx = this.canvas.getContext('2d');
-      const c_div = document.querySelector('.image-editor-canvas');
+      this.ctx = this.canvas.getContext("2d");
+      const c_div = document.querySelector(".image-editor-canvas");
       // shapes style
       this.ctx.strokeStyle = this.controls.strokeColor;
       this.ctx.fillStyle = this.controls.fillColor;
       this.ctx.lineWidth = this.controls.lineWidth;
       this.ctx.ClipToBounds = true;
-      this.ctx.lineCap = 'round';
+      this.ctx.lineCap = "round";
       this.initCanvasBg();
+    },
+    listShapesALayer(shape){
+      return this.shapesStack.dataStore.filter(el => el.type === shape);
+    },
+    deleteShape(key) {
+      const shapeIndex = this.shapesStack.dataStore.findIndex(shape => shape.timestamp === key);
+      this.redoPush(this.shapesStack.dataStore[shapeIndex]);
+      this.shapesStack.dataStore.splice(shapeIndex, 1);
+      this.reRenderShapes()
     },
     initCanvasBg(callback) {
       // draw image on canvas
@@ -170,88 +237,12 @@ export default {
         }
       };
     },
-    onDragging(event) {
-      if (this.dragging) {
-        this.draw(event);
-      }
-    },
-    onDragStart(event) {
-      return onDragStart(this)(event);
-    },
-
-    onDragStop(event) {
-      return onDragStop(this, pen, Stack)(event);
-    },
-    drawText(position, event) {
-      const heig = event.clientY - this.dragStartLocationEvent.clientY;
-      const widt = event.clientX - this.dragStartLocationEvent.clientX;
-
-      const txt = this.$refs.canvas_text;
-      txt.style.height = `${Math.abs(heig)}px`;
-      txt.style.width = `${Math.abs(widt)}px`;
-    },
-    getCanvasCoordinates(event) {
-      const x = event.clientX - this.canvas.getBoundingClientRect().left;
-      const y = event.clientY - this.canvas.getBoundingClientRect().top;
-      return {
-        x,
-        y,
-      };
-    },
-    draw(event) {
-      const pos = this.getCanvasCoordinates(event);
-      this.getSnapshot();
-      switch (this.controls.shape) {
-        case 'line':
-          const shapeProps = {
-            type: this.controls.shape,
-            from: this.dragStartLocation,
-            to: pos,
-            strokeColor: this.controls.strokeColor,
-            lineWidth: this.controls.lineWidth,
-          };
-          drawLine(shapeProps, this.ctx);
-          break;
-        case 'circle':
-          drawCircle({from: this.dragStartLocation,  to: pos }, this.ctx);
-          break;
-        case 'pen':
-          pen.drawPen({to: pos, from: this.dragStartLocation}, this.ctx);
-          break;
-        case 'text':
-          this.drawText(pos, event);
-          break;
-        case 'arrow':
-          drawArrow({from: this.dragStartLocation,  to: pos }, this.ctx);
-          break;
-      }
-    },
-    wrapText(drawingContext, text, x, y, maxWidth, lineHeight) {
-      const lines = text.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        const words = lines[i].split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-          const testLine = `${line + words[n]} `;
-          const metrics = drawingContext.measureText(testLine);
-          const testWidth = metrics.width;
-          if (testWidth > maxWidth && n > 0) {
-            drawingContext.fillText(line, x, y);
-            line = `${words[n]} `;
-            y += lineHeight;
-          } else {
-            line = testLine;
-          }
-        }
-        drawingContext.fillText(line, x, y + i * lineHeight);
-      }
-    },
     takeSnapshot() {
       this.snapshot = this.ctx.getImageData(
         0,
         0,
         this.canvas.width,
-        this.canvas.height,
+        this.canvas.height
       );
     },
     getSnapshot() {
@@ -260,55 +251,116 @@ export default {
     clearImage() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.initCanvasBg();
+      this.shapesStack.dataStore = []
     },
+    getCanvasCoordinates(event) {
+      const x = event.clientX - this.canvas.getBoundingClientRect().left;
+      const y = event.clientY - this.canvas.getBoundingClientRect().top;
+      return {
+        x,
+        y
+      };
+    },
+    // Mouse Events
+    onDragStart(event) {
+      if (this.controls.shape === 'text') {
+        startTextFrom(this);
+      }
+      return onDragStart(this)(event);
+    },
+    onDragging(event) {
+      return onDragging(this)(event);
+    },
+    onDragStop(event) {
+      return onDragStop(this, pen)(event);
+    },
+
+    draw(event) {
+      const pos = this.getCanvasCoordinates(event);
+      this.getSnapshot();
+      switch (this.controls.shape) {
+        case "line":
+          drawLine(
+            {
+              type: this.controls.shape,
+              from: this.dragStartLocation,
+              to: pos,
+              strokeColor: this.controls.strokeColor,
+              lineWidth: this.controls.lineWidth
+            },
+            this.ctx
+          );
+          break;
+        case "circle":
+          drawCircle({ from: this.dragStartLocation, to: pos }, this.ctx);
+          break;
+        case "pen":
+          pen.drawPen({ to: pos, from: this.dragStartLocation }, this.ctx);
+          break;
+        case "text":
+          drawTextarea(
+            { fromEvent: this.dragStartLocationEvent, toEvent: event },
+            this
+          );
+          break;
+        case "arrow":
+          drawArrow({ from: this.dragStartLocation, to: pos }, this.ctx);
+          break;
+      }
+    },
+
     saveCanvasAsImage() {
-      const imgDataUrl = this.canvas.toDataURL('image/png');
+      const imgDataUrl = this.canvas.toDataURL("image/png");
       this.$nextTick(() => {
-        this.$emit('input', { src: imgDataUrl, key: this.value.key });
+        this.$emit("input", { src: imgDataUrl, key: this.value.key });
       });
     },
     saveCanvasText(event) {
-      const txt = this.$refs.canvas_text;
-      if (this.canvas_text) {
-        this.ctx.fillStyle = this.controls.textColor;
-        this.ctx.textBaseline = 'top';
-        this.ctx.font = `${
-          this.controls.fontSize
-        }px 'Avenir', Helvetica, Arial, sans-serif`;
-        const pos = this.getCanvasCoordinates({
-          clientX: event.target.offsetLeft + event.target.clientWidth,
-          clientY: event.target.offsetTop,
-        });
-        // this.ctx.fillText(this.canvas_text, pos.x, pos.y);
-        this.wrapText(
-          this.ctx,
-          this.canvas_text,
-          pos.x + 3,
-          pos.y + 4,
-          txt.clientWidth,
-          25,
-        );
-        this.canvas_text = null;
-        this.$nextTick(() => {
-          // this.canvas_text = null
-          this.ctx.fillStyle = this.controls.fillColor;
-        });
-      } else {
-        txt.style.display = 'none';
+      return saveCanvasText({ from: this.dragStartLocation }, this.ctx, this);
+    },
+
+    push (element) {
+      this.shapesStack.dataStore.push(element);
+    },
+    pop () {
+      const pop = this.shapesStack.dataStore.pop();
+      return pop;
+    },
+    redoPush (element) {
+      this.shapesStack.redoStackDataStore.push(element);
+    },
+    redoPop () {
+      const pop = this.shapesStack.redoStackDataStore.pop()
+      return pop;
+    },
+    undoShapes() {
+      if (this.shapesStack.dataStore.length) {
+        const shape = this.pop();
+        if (!shape) return;
+        this.redoPush(shape);
+        this.reRenderShapes()
       }
     },
+    redoShapes() {
+      if (this.shapesStack.redoStackDataStore.length) {
+        const shape = this.redoPop();
+        if (!shape) return;
+        this.push(shape);
+        this.reRenderShapes('redo')
+      }
+    }
   },
   watch: {
-    'controls.lineWidth': function (nVal, oldVal) {
+    "controls.lineWidth": function(nVal, oldVal) {
       this.ctx.lineWidth = nVal;
     },
-    'controls.strokeColor': function (nVal, oldVal) {
+    "controls.strokeColor": function(nVal, oldVal) {
       this.ctx.strokeStyle = nVal;
       this.ctx.fillStyle = nVal;
     },
-    'controls.shape': function (nVal, oldVal) {
-      this.$refs.canvas_text.style.display = 'none';
-    },
-  },
+    "controls.shape": function(nVal, oldVal) {
+      this.$refs.canvas_text.style.display = "none";
+    }
+  }
 };
 </script>
