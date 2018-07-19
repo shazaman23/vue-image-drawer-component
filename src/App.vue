@@ -6,7 +6,6 @@
 
 <script>
 import UploadImage from './components/Imager/UploadImage.vue';
-import Stack from './helpers/Stack';
 
 export default {
   name: 'app',
