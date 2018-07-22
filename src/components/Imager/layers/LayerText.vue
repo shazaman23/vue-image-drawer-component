@@ -10,22 +10,43 @@
 
     <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
       <div class="card-body">
-        <div>
-          <div v-for="el in value" :key="el.timestamp" class="d-flex justify-content-between">
-            <i class="fa fa-trash" @click="$emit('onDelete', el.timestamp)"></i>
-            <span>{{el.text}}</span>
-            <span :style="`background-color:${el.textColor}; width: 15px; height: 15px; border-radius: 50%`" class="d-inline-block"></span>
-          </div>
-        </div>
+          <LayerTextElement
+           v-for="el in textProps" 
+           :key="el.timestamp" 
+           :value="el"
+           @onDelete="$emit('onDelete', $event)"
+           @input="onTextUpdated"/>
       </div>
     </div>
   </div>
 </template>
 <script>
+import LayerTextElement from './LayerTextElement'
 export default {
+  components: { LayerTextElement },
   props: {
     value: {
       type: Array
+    }
+  },
+  data () {
+    return {
+      textProps: [...this.value]
+    }
+  },
+  updated () {
+    // this.textProps = [...this.value]
+  },
+  methods: {
+    onTextUpdated(value) {
+      const propIndex = this.textProps.findIndex(el => el.timestamp === value.timestamp);
+      this.textProps.splice(propIndex, 1, value);
+      this.$emit("textUpdated", value);
+    }
+  },
+  watch: {
+    "value": function(newProps, oldProps){
+      this.textProps = newProps
     }
   }
 };

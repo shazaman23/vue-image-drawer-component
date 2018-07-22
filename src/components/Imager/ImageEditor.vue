@@ -91,6 +91,7 @@
                 :value="listShapesALayer('text')"
                 v-if="listShapesALayer('text').length"
                 @onDelete="deleteShape"
+                @textUpdated="textUpdated"
                  />
               <LayerLine
                 :value="listShapesALayer('line')"
@@ -146,7 +147,8 @@ export default {
       },
       shapesStack: {
         dataStore: [],
-        redoStackDataStore: []
+        redoStackDataStore: [],
+        holderDataStore: []
       }
     };
   },
@@ -158,12 +160,6 @@ export default {
         widt: img.width,
         hegh: img.height
       };
-    },
-    stackLength() {
-      this.shapesStack.top;
-    },
-    stackDataset() {
-      return this.shapesStack.dataStore;
     }
   },
   mounted() {
@@ -174,15 +170,11 @@ export default {
   },
   methods: {
     ctrlZ(event) {
-      if (event.keyCode == 90 && event.ctrlKey) {
-        const shape = this.pop();
-        if (!shape) return;
-        this.redoPush(shape)
-        if (shape)
-        {
-          this.redoPush(shape);
-        }
-        this.reRenderShapes()
+      if (event.keyCode == 90 && event.ctrlKey && event.keyCode === 16) {
+        this.redoShapes()
+      } else if (event.keyCode == 90 && event.ctrlKey) {
+        this.undoShapes()
+        console.log(":redo")
       }
     },
     reRenderShapes(type = 'undo') {
@@ -218,13 +210,22 @@ export default {
       this.initCanvasBg();
     },
     listShapesALayer(shape){
-      return this.shapesStack.dataStore.filter(el => el.type === shape);
+      const arr = this.shapesStack.dataStore.filter(el => el.type === shape);
+      return arr;
     },
     deleteShape(key) {
       const shapeIndex = this.shapesStack.dataStore.findIndex(shape => shape.timestamp === key);
-      this.redoPush(this.shapesStack.dataStore[shapeIndex]);
+      this.shapesStack.holderDataStore.push(this.shapesStack.dataStore[shapeIndex]);
+      this.$set(this.shapesStack.dataStore[shapeIndex], "isDeleted", true);
       this.shapesStack.dataStore.splice(shapeIndex, 1);
       this.reRenderShapes()
+    },
+    textUpdated (updateTextProps) {
+     const elIndex = this.shapesStack.dataStore.findIndex(el => el.timestamp === updateTextProps.timestamp);
+     this.shapesStack.holderDataStore.push(this.shapesStack.dataStore[elIndex]);
+     this.shapesStack.dataStore.splice(elIndex, 1);
+     this.push(updateTextProps);
+     this.reRenderShapes();
     },
     initCanvasBg(callback) {
       // draw image on canvas
@@ -334,7 +335,16 @@ export default {
       return pop;
     },
     undoShapes() {
-      if (this.shapesStack.dataStore.length) {
+      if (this.shapesStack.holderDataStore.length) {
+        const shape = this.shapesStack.holderDataStore.pop();
+        if (shape.type === "text" && !shape.isDeleted) {
+          const undoShape = this.pop();
+          this.redoPush(undoShape);
+        }
+        this.push(shape)
+        this.reRenderShapes()
+      }
+      else if (this.shapesStack.dataStore.length) {
         const shape = this.pop();
         if (!shape) return;
         this.redoPush(shape);
@@ -344,7 +354,6 @@ export default {
     redoShapes() {
       if (this.shapesStack.redoStackDataStore.length) {
         const shape = this.redoPop();
-        if (!shape) return;
         this.push(shape);
         this.reRenderShapes('redo')
       }
