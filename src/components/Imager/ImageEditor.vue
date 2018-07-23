@@ -26,10 +26,9 @@
           <label for="text-color">undo</label>
           <button 
             class="btn btn-primary btn-sm"
-            :class="{disabled: !shapesStack.dataStore.length}"
-            :disabled="!shapesStack.dataStore.length"
-            @click="undoShapes"
-            >
+            :class="{disabled: !undoBtnActivation}"
+            :disabled="!undoBtnActivation"
+            @click="undoShapes">
               <i class="fa fa-undo"></i>
           </button>
         </div>
@@ -39,8 +38,7 @@
             class="btn btn-primary btn-sm"
             :class="{disabled: !shapesStack.redoStackDataStore.length}"
             :disabled="!shapesStack.redoStackDataStore.length"
-            @click="redoShapes"
-            >
+            @click="redoShapes">
               <i class="fa fa-undo" style="transform: rotateY(180deg)"></i>
             </button>
         </div>
@@ -53,7 +51,7 @@
       <div class="image-editor-wrapper">
         <div class="row">
           <div class="col-md-2">
-            <div class="image-editor-toolbar bar-bg">
+            <div class="image-editor-toolbar bar-bg d-felx">
               <EditorShape v-model="controls.shape" shape="circle" icon="genderless"/>
               <EditorShape v-model="controls.shape" shape="line" icon="ellipsis-v"/>
               <EditorShape v-model="controls.shape" shape="pen" icon="pencil"/>
@@ -97,7 +95,17 @@
                 :value="listShapesALayer('line')"
                 v-if="listShapesALayer('line').length"
                 @onDelete="deleteShape"
-                 />
+              />
+              <LayerCircle
+                :value="listShapesALayer('circle')"
+                v-if="listShapesALayer('circle').length"
+                @onDelete="deleteShape"
+              />
+              <LayerArrow
+                :value="listShapesALayer('arrow')"
+                v-if="listShapesALayer('arrow').length"
+                @onDelete="deleteShape"
+              />
             </div>
           </div>
 
@@ -121,9 +129,11 @@ import onDragging from "./events/onDragging";
 // Layers
 import LayerText from './layers/LayerText';
 import LayerLine from './layers/LayerLine';
+import LayerCircle from './layers/LayerCircle';
+import LayerArrow from './layers/LayerArrow';
 
 export default {
-  components: { EditorShape, LayerText, LayerLine },
+  components: { EditorShape, LayerText, LayerLine, LayerCircle, LayerArrow },
   props: {
     value: {}
   },
@@ -160,6 +170,14 @@ export default {
         widt: img.width,
         hegh: img.height
       };
+    },
+    undoBtnActivation () {
+      if (this.shapesStack.dataStore.length) {
+        return true
+      } else if (this.shapesStack.holderDataStore.length) {
+        return true
+      }
+      return false
     }
   },
   mounted() {
@@ -184,11 +202,20 @@ export default {
       this.initCanvasBg(() => {
         for (let i = 0; i < shapes.length; i++) {
           let shape = shapes[i]
-          if (shape.type === 'line')
-          {
-            drawLine(shape, this.ctx);
-          } else if(shape.type === 'text') {
-            redrawText(shape, self)
+
+          switch (shape.type) {
+            case 'text':
+              redrawText(shape, self)
+              break;
+            case 'line':
+              drawLine(shape, self.ctx);
+              break;
+            case 'circle':
+              drawCircle(shape, self.ctx)
+              break;
+            case 'arrow':
+              drawArrow(shape, self.ctx)
+              break;
           }
         }
       });
@@ -299,10 +326,12 @@ export default {
           pen.drawPen({ to: pos, from: this.dragStartLocation }, this.ctx);
           break;
         case "text":
+        this.$nextTick(() => {
           drawTextarea(
             { fromEvent: this.dragStartLocationEvent, toEvent: event },
             this
           );
+        })
           break;
         case "arrow":
           drawArrow({ from: this.dragStartLocation, to: pos }, this.ctx);

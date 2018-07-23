@@ -165,3 +165,10 @@ $fa-font-path: '~font-awesome/fonts';
     color: #ccc;
   }
 }
+
+#accordion{
+  max-height: 500px;
+  overflow: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
