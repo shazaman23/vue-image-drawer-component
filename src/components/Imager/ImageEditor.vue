@@ -1,28 +1,28 @@
 <template>
   <div class="image-editor">
     <div class="container-fluid">
-      <div class="edit-shape d-flex text-center my-3 text-capitalize">
+      <div class="edit-shape d-flex text-center my-3 justify-content-center flex-wrap text-capitalize">
         <template v-if="controls.shape !== 'text'">
-          <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
             <label for="line-width">Line width</label>
             <input type="range" id="line-width" :min="1" v-model="controls.lineWidth" :max="50" />
           </div>
-          <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
             <label for="stroke-color">stroke color</label>
             <input type="color" id="stroke-color" v-model="controls.strokeColor"/>
           </div>
         </template>
         <template v-else>
-          <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
             <label for="font-size">Font size</label>
             <input type="range" id="font-size" :min="1" v-model="controls.fontSize" :max="50" />
           </div>
-          <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
             <label for="text-color">text color</label>
             <input type="color" id="text-color" v-model="controls.textColor"/>
           </div>
         </template>
-        <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
           <label for="text-color">undo</label>
           <button 
             class="btn btn-primary btn-sm"
@@ -32,7 +32,7 @@
               <i class="fa fa-undo"></i>
           </button>
         </div>
-        <div class="d-flex flex-column align-items-center border mb-2 p-2">
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
           <label for="text-color">redo</label>
           <button
             class="btn btn-primary btn-sm"
@@ -42,16 +42,29 @@
               <i class="fa fa-undo" style="transform: rotateY(180deg)"></i>
             </button>
         </div>
-      </div>
-      <div class="mb-2">
-        <button class="btn btn-primary" @click="$emit('input', null)">close</button>
-        <button class="btn btn-primary mx-3" @click="clearImage">clear image</button>
-        <button class="btn btn-primary" @click="saveCanvasAsImage">save changes</button>
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
+          <label for="text-color">Close</label>
+          <button class="btn btn-primary btn-sm" @click="$emit('input', null)">
+            <i class="fa fa-close"></i>
+          </button>
+        </div>
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
+          <label for="text-color">Reset Image</label>
+        <button class="btn btn-primary btn-sm" @click="clearImage">
+          <i class="fa fa-trash"></i>
+        </button>
+        </div>
+        <div class="d-flex flex-column align-items-center border mb-2 p-2 card">
+          <label for="text-color">Save Image</label>
+        <button class="btn btn-primary btn-sm" @click="saveCanvasAsImage">
+          <i class="fa fa-save"></i>
+        </button>
+        </div>
       </div>
       <div class="image-editor-wrapper">
         <div class="row">
-          <div class="col-md-2">
-            <div class="image-editor-toolbar bar-bg d-felx">
+          <div class="col-lg-1 col-md-2">
+            <div class="image-editor-toolbar bar-bg d-flex flex-md-column align-items-md-center align-items-center justify-content-around">
               <EditorShape v-model="controls.shape" shape="circle" icon="genderless"/>
               <EditorShape v-model="controls.shape" shape="line" icon="ellipsis-v"/>
               <EditorShape v-model="controls.shape" shape="pen" icon="pencil"/>
@@ -59,7 +72,7 @@
               <EditorShape v-model="controls.shape" shape="arrow" icon="long-arrow-down"/>
             </div>
           </div>
-            <div class="col-md-8">
+            <div class="col-lg-9 col-md-10">
               <div class="image-editor-canvas">
                 <canvas
                   ref="canvas"
@@ -83,7 +96,7 @@
                 </div>
               </div>
             </div>
-          <div class="col-md-2">
+          <div class="col-lg-2" v-if="shapesStack.dataStore.length">
             <div id="accordion">
               <LayerText
                 :value="listShapesALayer('text')"

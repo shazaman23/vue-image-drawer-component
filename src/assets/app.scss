@@ -28,16 +28,9 @@ $fa-font-path: '~font-awesome/fonts';
     }
     &-toolbar {
       color: #000;
-      width: 100px;
       .edit-shape {
           padding:10px 5px;
-          display: block;
           border-bottom: 1px solid #d0d0d0;
-          text-align: right;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
           input {
             margin: 0 10px;
           }

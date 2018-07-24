@@ -1,5 +1,5 @@
 <template>
-  <div @click="$emit('input', shape)" class="edit-shape d-flex flex-column" :class="{active: shape === value}">
+  <div @click="$emit('input', shape)" class="edit-shape d-flex flex-column w-100" :class="{active: shape === value}">
     <i :class="`fa fa-${icon}`"></i>
     <div class="text-capitalize">{{shape}}</div>
   </div>
