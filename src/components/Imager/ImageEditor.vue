@@ -279,6 +279,7 @@ export default {
     clearImage() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.initCanvasBg();
+      this.shapesStack.holderDataStore = [...this.shapesStack.dataStore]
       this.shapesStack.dataStore = []
     },
     getCanvasCoordinates(event) {
