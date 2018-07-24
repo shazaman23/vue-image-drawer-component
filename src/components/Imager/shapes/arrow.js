@@ -8,6 +8,7 @@ export default function drawArrow(props, ctx) {
   ctx.moveTo(props.from.x, props.from.y);
   ctx.lineTo(props.to.x, props.to.y);
   ctx.stroke();
+  // ctx.fillRect();
 
   // starting a new path from the head of the arrow to one of the sides of the point
   ctx.beginPath();

@@ -1,8 +1,8 @@
 const $lineHeight = 27;
 
 const drawTextarea = (props, vm) => {
-  const heig = props.toEvent.clientY - props.fromEvent.clientY;
-  const widt = props.toEvent.clientX - props.fromEvent.clientX;
+  const heig = vm.getCanvasCoordinates(props.toEvent).y - vm.getCanvasCoordinates(props.fromEvent).y;
+  const widt = vm.getCanvasCoordinates(props.toEvent).x - vm.getCanvasCoordinates(props.fromEvent).x;
 
   const txt = vm.$refs.canvas_text;
   txt.style.height = `${Math.abs(heig)}px`;

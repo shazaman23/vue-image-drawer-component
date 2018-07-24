@@ -5,6 +5,7 @@ $fa-font-path: '~font-awesome/fonts';
 // Image Editor
 .image {
   &-editor {
+    overscroll-behavior-y: contain;
     overflow: auto;
     background-color: #f1f1f1;
     position: fixed;

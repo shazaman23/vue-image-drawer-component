@@ -80,7 +80,12 @@
                   height="800"
                   @mousemove="onDragging"
                   @mouseup="onDragStop"
-                  @mousedown="onDragStart">
+                  @mousedown="onDragStart"
+
+                  @touchmove.passive="onDragging"
+                  @touchend="onDragStop"
+                  @touchstart.passive="onDragStart"
+                  >
                 </canvas>
                 <div ref="canvas_text" class="canvas-text">
                   <textarea
@@ -172,7 +177,8 @@ export default {
         dataStore: [],
         redoStackDataStore: [],
         holderDataStore: []
-      }
+      },
+      isOnMobile: false
     };
   },
   computed: {
@@ -295,9 +301,27 @@ export default {
       this.shapesStack.holderDataStore = [...this.shapesStack.dataStore]
       this.shapesStack.dataStore = []
     },
+    getCanvasCoordinatesMouse(mouseEvent) {
+      const x = mouseEvent.clientX - this.canvas.getBoundingClientRect().left;
+      const y = mouseEvent.clientY - this.canvas.getBoundingClientRect().top;
+      return {
+        x,
+        y
+      };
+    }
+    ,
     getCanvasCoordinates(event) {
-      const x = event.clientX - this.canvas.getBoundingClientRect().left;
-      const y = event.clientY - this.canvas.getBoundingClientRect().top;
+      if (this.isOnMobile) {
+        return this.getCanvasCoordinatesTouch(event);
+      }
+      return this.getCanvasCoordinatesMouse(event);
+    },
+    getCanvasCoordinatesTouch(touchEvent) {
+      const clientX = (touchEvent.targetTouches[0] ? touchEvent.targetTouches[0].pageX : touchEvent.changedTouches[touchEvent.changedTouches.length-1].pageX)
+      const clientY = (touchEvent.targetTouches[0] ? touchEvent.targetTouches[0].pageY : touchEvent.changedTouches[touchEvent.changedTouches.length-1].pageY)
+      const x = clientX - this.canvas.getBoundingClientRect().left;
+      const y = clientY - this.canvas.getBoundingClientRect().top;
+      touchEvent.preventDefault();
       return {
         x,
         y
@@ -318,7 +342,7 @@ export default {
     },
 
     draw(event) {
-      const pos = this.getCanvasCoordinates(event);
+        const pos = this.getCanvasCoordinates(event);
       this.getSnapshot();
       switch (this.controls.shape) {
         case "line":
@@ -351,6 +375,15 @@ export default {
           drawArrow({ from: this.dragStartLocation, to: pos }, this.ctx);
           break;
       }
+    },
+
+    checkIsTouchEvent(event) {
+      if (event.type.includes('touch')) {
+        this.isOnMobile = true;
+        return true;
+      }
+      this.isOnMobile = false;
+      return false;
     },
 
     saveCanvasAsImage() {
