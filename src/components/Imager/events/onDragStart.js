@@ -1,5 +1,4 @@
 const onDragStart = vm => (event) => {
-  console.log(event.type);
   vm.checkIsTouchEvent(event);
   vm.dragStartLocationEvent = event;
   vm.dragStartLocation = null;

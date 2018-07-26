@@ -211,7 +211,6 @@ export default {
         this.redoShapes()
       } else if (event.keyCode == 90 && event.ctrlKey) {
         this.undoShapes()
-        console.log(":redo")
       }
     },
     reRenderShapes(type = 'undo') {
@@ -241,9 +240,7 @@ export default {
     },
     init() {
       this.canvas = this.$refs.canvas;
-      this.canvas.style.width = "100%";
       // make canvas takes its parent width
-      this.canvas.width = this.canvas.offsetWidth;
       // init canvas context
       this.ctx = this.canvas.getContext("2d");
       const c_div = document.querySelector(".image-editor-canvas");
@@ -278,7 +275,12 @@ export default {
       const img = new Image();
       img.src = this.value.src;
       img.onload = () => {
-        this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+        this.canvas.width = img.width
+        this.canvas.height = img.height
+        this.canvas.height = this.canvas.offsetHeight
+        this.canvas.width = this.canvas.offsetWidth
+
+        this.ctx.drawImage(img, 0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
         if (callback) {
           callback(true);
         }
