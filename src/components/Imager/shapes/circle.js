@@ -1,6 +1,8 @@
 export default function drawCircle(props, ctx) {
   const radius = Math.sqrt(Math.pow(props.from.x - props.to.x, 2) + Math.pow(props.from.y - props.to.y, 2));
   ctx.beginPath();
+  ctx.lineWidth = props.lineWidth;
+  ctx.strokeStyle = props.strokeColor;
   ctx.arc(
     props.from.x,
     props.from.y,

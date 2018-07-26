@@ -1,7 +1,8 @@
 const onDragStop = (vm, pen) => (event) => {
+  vm.dragging = false;
   const pos = vm.getCanvasCoordinates(event);
   const startFrom = vm.dragStartLocation;
-  vm.dragging = false;
+  vm.dragStartLocationTemp = { ...startFrom };
   vm.draw(event);
   const shapeProps = {
     type: vm.controls.shape,

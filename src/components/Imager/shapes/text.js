@@ -1,8 +1,8 @@
 const $lineHeight = 27;
 
 const drawTextarea = (props, vm) => {
-  const heig = vm.getCanvasCoordinates(props.toEvent).y - vm.getCanvasCoordinates(props.fromEvent).y;
-  const widt = vm.getCanvasCoordinates(props.toEvent).x - vm.getCanvasCoordinates(props.fromEvent).x;
+  const heig = props.from.y - props.to.y;
+  const widt = props.from.x - props.to.x;
 
   const txt = vm.$refs.canvas_text;
   txt.style.height = `${Math.abs(heig)}px`;
@@ -55,6 +55,7 @@ const saveCanvasText = (props, ctx, vm) => {
       type: 'text',
       timestamp: Date.now(),
     }, ctx, vm);
+    console.log('Yes text');
   }
   txt.style.display = 'none';
   vm.canvas_text = null;

@@ -126,7 +126,6 @@
               />
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -163,6 +162,7 @@ export default {
       snapshot: null,
       dragStartLocation: null,
       dragStartLocationEvent: null,
+      dragStartLocationTemp: null,
       canvas_text: null,
       controls: {
         fillBox: false,
@@ -360,15 +360,25 @@ export default {
           );
           break;
         case "circle":
-          drawCircle({ from: this.dragStartLocation, to: pos }, this.ctx);
+          drawCircle({
+            from: this.dragStartLocation,
+            to: pos,
+            strokeColor: this.controls.strokeColor,
+            lineWidth: this.controls.lineWidth
+            }, this.ctx);
           break;
         case "pen":
-          pen.drawPen({ to: pos, from: this.dragStartLocation }, this.ctx);
+          pen.drawPen({
+            to: pos,
+            from: this.dragStartLocation,
+            strokeColor: this.controls.strokeColor,
+            lineWidth: this.controls.lineWidth
+            }, this.ctx);
           break;
         case "text":
         this.$nextTick(() => {
           drawTextarea(
-            { fromEvent: this.dragStartLocationEvent, toEvent: event },
+            { from: this.dragStartLocation, to: pos },
             this
           );
         })
@@ -395,7 +405,7 @@ export default {
       });
     },
     saveCanvasText(event) {
-      return saveCanvasText({ from: this.dragStartLocation }, this.ctx, this);
+      return saveCanvasText({ from: this.dragStartLocationTemp }, this.ctx, this);
     },
 
     push (element) {

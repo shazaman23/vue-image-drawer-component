@@ -8,6 +8,8 @@ const pen = {
       pen.lastY = props.from.y;
       pen.lineStart = false;
       ctx.beginPath();
+      ctx.lineWidth = props.lineWidth;
+      ctx.strokeStyle = props.strokeColor;
     }
     ctx.lineTo(pen.lastX, pen.lastY);
     ctx.lineTo(props.to.x, props.to.y);
